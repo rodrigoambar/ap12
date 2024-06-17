@@ -99,16 +99,16 @@ $$
 -- devolve: o saldo da conta especificada
 DROP ROUTINE IF EXISTS fn_consultar_saldo;
 CREATE OR REPLACE FUNCTION fn_consultar_saldo (
-	IN cod_cliente INT, 
-	IN cod_conta INT)
+	IN p_cod_cliente INT, 
+	IN p_cod_conta INT)
 	RETURNS NUMERIC(10, 2)
 LANGUAGE plpgsql
 AS $$
 DECLARE
 v_saldo_conta NUMERIC(10, 2);
 BEGIN
-	SELECT saldo FROM tb_conta c WHERE c.cod_conta = cod_cliente AND
-c.cod_conta = cod_conta INTO v_saldo_conta;
+	SELECT saldo FROM tb_conta c WHERE c.cod_conta = p_cod_cliente AND
+c.cod_conta = p_cod_conta INTO v_saldo_conta;
 RETURN v_saldo_conta;
 END;
 $$
@@ -169,5 +169,42 @@ BEGIN
 END;
 $$
 
+--1.3 Escreva blocos anônimos para testar cada função
+DO $$
+DECLARE
+    v_saldo NUMERIC;
+BEGIN
+    v_saldo := fn_consultar_saldo(2, 2);
+    IF v_saldo IS NOT NULL THEN
+        RAISE NOTICE 'Saldo da conta 1 do cliente 1: %', v_saldo;
+    ELSE
+        RAISE NOTICE 'Conta 1 do cliente 1 não encontrada.';
+    END IF;
+END;
+$$
 
-	
+DO $$
+DECLARE
+    v_result BOOLEAN;
+	p_cod_cliente_remetente INT;
+    p_cod_conta_remetente INT;
+    p_cod_cliente_destinatario INT;
+    p_cod_conta_destinatario INT;
+    p_valor_transferencia NUMERIC;
+BEGIN
+	p_cod_cliente_remetente := 1;
+    p_cod_conta_remetente := 1;
+    p_cod_cliente_destinatario := 2 ;
+    p_cod_conta_destinatario := 2;
+    p_valor_transferencia := 200;
+    SELECT fn_transferir(p_cod_cliente_remetente, p_cod_conta_remetente, p_cod_cliente_destinatario, p_cod_conta_destinatario, p_valor_transferencia) INTO v_result;
+
+    IF v_result THEN
+        RAISE NOTICE 'Transfer successful!';
+    ELSE
+        RAISE NOTICE 'Transfer failed.';
+    END IF;
+END;
+$$
+
+
